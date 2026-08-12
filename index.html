@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BinaLegasiReport</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,500;8..60,600;8..60,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js" crossorigin="anonymous"></script>
+<style>
+  :root{
+    --ink-green:#6B1A2C;
+    --ink-green-dark:#4A1220;
+    --brass:#C9A227;
+    --brass-light:#E0BE55;
+    --paper:#F5F1EC;
+    --paper-2:#FFFFFF;
+    --charcoal:#2A2320;
+    --sage:#8C7A72;
+    --rust:#A6432F;
+    --line:#E3DAD0;
+    --shadow: 0 1px 2px rgba(107,26,44,0.06), 0 6px 20px rgba(107,26,44,0.07);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--paper);
+    color:var(--charcoal);
+    font-family:'Inter',sans-serif;
+    -webkit-font-smoothing:antialiased;
+    min-height:100vh;
+  }
+  .app{max-width:1180px;margin:0 auto;padding:0 20px 80px;}
+
+  /* HEADER */
+  header.top{
+    padding:36px 20px 0;
+    max-width:1180px;
+    margin:0 auto;
+  }
+  .brand-row{display:flex;align-items:center;justify-content:center;text-align:center;}
+  .brand{display:flex;flex-direction:column;align-items:center;gap:2px;}
+  .brand h1{
+    font-family:'Source Serif 4',serif;
+    font-size:27px;
+    font-weight:600;
+    margin:0;
+    color:var(--ink-green);
+    letter-spacing:0.2px;
+  }
+  .brand .sub{
+    font-size:12.5px;
+    color:var(--sage);
+    letter-spacing:0.08em;
+    text-transform:uppercase;
+    margin-top:2px;
+  }
+  .tabs{
+    display:flex;
+    gap:2px;
+    margin-top:28px;
+    border-bottom:1.5px solid var(--line);
+  }
+  .tab{
+    font-family:'Inter',sans-serif;
+    font-weight:600;
+    font-size:14.5px;
+    padding:12px 22px;
+    background:transparent;
+    border:none;
+    cursor:pointer;
+    color:var(--sage);
+    position:relative;
+    top:1.5px;
+    border-bottom:2.5px solid transparent;
+    transition:color .15s ease;
+  }
+  .tab.active{color:var(--ink-green);border-bottom-color:var(--brass);}
+  .tab:hover:not(.active){color:var(--ink-green-dark);}
+
+  main{padding-top:32px;}
+  .view{display:none;}
+  .view.active{display:block;}
+
+  /* FORM */
+  .form-card{
+    background:var(--paper-2);
+    border-radius:10px;
+    box-shadow:var(--shadow);
+    border:1px solid var(--line);
+    overflow:hidden;
+  }
+  .form-card .form-head{
+    background:linear-gradient(135deg, var(--ink-green), var(--ink-green-dark));
+    color:#EFEAD9;
+    padding:26px 30px;
+  }
+  .form-card .form-head h2{
+    font-family:'Source Serif 4',serif;
+    font-size:20px;
+    margin:0 0 4px;
+    font-weight:600;
+  }
+  .form-card .form-head p{
+    margin:0;
+    font-size:13px;
+    color:#B9C7BD;
+  }
+  form{padding:8px 30px 30px;}
+  .field{
+    display:flex;
+    gap:16px;
+    padding:20px 0;
+    border-bottom:1px solid var(--line);
+    align-items:flex-start;
+  }
+  .field:last-of-type{border-bottom:none;}
+  .fnum{
+    flex-shrink:0;
+    width:30px;height:30px;
+    border-radius:50%;
+    background:var(--paper);
+    border:1.5px solid var(--brass);
+    color:var(--ink-green);
+    font-family:'IBM Plex Mono',monospace;
+    font-size:12.5px;
+    font-weight:600;
+    display:flex;align-items:center;justify-content:center;
+    margin-top:2px;
+  }
+  .fbody{flex:1;min-width:0;}
+  .fbody label{
+    display:block;
+    font-weight:600;
+    font-size:13.5px;
+    color:var(--ink-green-dark);
+    margin-bottom:8px;
+    letter-spacing:0.01em;
+  }
+  .fbody .hint{font-size:12px;color:var(--sage);margin-top:6px;}
+  input[type="date"], input[type="text"], input[type="number"], select{
+    width:100%;
+    max-width:360px;
+    padding:10px 12px;
+    border:1.5px solid var(--line);
+    border-radius:7px;
+    font-family:'Inter',sans-serif;
+    font-size:14.5px;
+    color:var(--charcoal);
+    background:#fff;
+    transition:border-color .15s ease, box-shadow .15s ease;
+  }
+  input:focus, select:focus{
+    outline:none;
+    border-color:var(--brass);
+    box-shadow:0 0 0 3px rgba(184,134,46,0.18);
+  }
+  input:invalid:not(:placeholder-shown){border-color:var(--rust);}
+  .section-label{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:11.5px;
+    letter-spacing:0.1em;
+    text-transform:uppercase;
+    color:var(--brass);
+    font-weight:600;
+    padding:22px 0 4px;
+  }
+  .submit-row{padding-top:24px;display:flex;align-items:center;gap:16px;}
+  button.primary{
+    background:#2E7D46;
+    color:#F2FAF4;
+    border:none;
+    padding:13px 28px;
+    border-radius:7px;
+    font-family:'Inter',sans-serif;
+    font-weight:600;
+    font-size:14.5px;
+    cursor:pointer;
+    transition:background .15s ease, transform .1s ease;
+  }
+  button.primary:hover{background:#256639;}
+  button.primary:active{transform:translateY(1px);}
+  button.primary:disabled{opacity:0.55;cursor:not-allowed;}
+  .form-msg{font-size:13.5px;font-weight:500;}
+  .form-msg.ok{color:var(--ink-green);}
+  .form-msg.err{color:var(--rust);}
+
+  .stamp{
+    display:none;
+    align-items:center;
+    gap:10px;
+    margin-top:18px;
+    padding:14px 18px;
+    background:#EFEAD9;
+    border:1.5px dashed var(--brass);
+    border-radius:8px;
+    color:var(--ink-green-dark);
+    font-family:'Source Serif 4',serif;
+    font-size:14.5px;
+  }
+  .stamp.show{display:flex;}
+  .stamp .dot{width:8px;height:8px;border-radius:50%;background:var(--brass);flex-shrink:0;}
+
+  /* DASHBOARD */
+  .dash-toolbar{
+    display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end;
+    margin-bottom:24px;
+  }
+  .dash-toolbar .fld{display:flex;flex-direction:column;gap:6px;}
+  .dash-toolbar label{font-size:12px;font-weight:600;color:var(--sage);text-transform:uppercase;letter-spacing:0.05em;}
+  .dash-toolbar select, .dash-toolbar input{padding:9px 11px;border-radius:7px;border:1.5px solid var(--line);font-family:'Inter';font-size:13.5px;background:#fff;}
+  .dash-toolbar button{
+    background:transparent;border:1.5px solid var(--ink-green);color:var(--ink-green);
+    padding:9px 16px;border-radius:7px;font-weight:600;font-size:13.5px;cursor:pointer;
+  }
+  .dash-toolbar button:hover{background:var(--ink-green);color:#fff;}
+
+  .stat-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(190px,1fr));
+    gap:14px;
+    margin-bottom:28px;
+  }
+  .stat{
+    background:var(--paper-2);
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:18px 20px;
+    box-shadow:var(--shadow);
+  }
+  .stat .label{font-size:11.5px;color:var(--sage);text-transform:uppercase;letter-spacing:0.06em;font-weight:600;}
+  .stat .value{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:26px;
+    font-weight:600;
+    color:var(--ink-green-dark);
+    margin-top:6px;
+  }
+  .stat .value small{font-size:14px;font-weight:500;color:var(--sage);}
+
+  .panels{display:grid;grid-template-columns:1.3fr 1fr;gap:20px;margin-bottom:24px;}
+  @media (max-width:860px){.panels{grid-template-columns:1fr;}}
+  .panel{
+    background:var(--paper-2);border:1px solid var(--line);border-radius:10px;
+    padding:20px 22px;box-shadow:var(--shadow);
+  }
+  .panel h3{
+    font-family:'Source Serif 4',serif;font-size:16px;margin:0 0 16px;color:var(--ink-green-dark);
+  }
+  .table-wrap{overflow-x:auto;}
+  table{width:100%;border-collapse:collapse;font-size:13px;}
+  th{
+    text-align:left;padding:9px 10px;font-size:11px;text-transform:uppercase;
+    letter-spacing:0.04em;color:var(--sage);border-bottom:1.5px solid var(--line);
+    font-weight:600;white-space:nowrap;
+  }
+  td{padding:9px 10px;border-bottom:1px solid var(--line);white-space:nowrap;color:var(--charcoal);}
+  tr:last-child td{border-bottom:none;}
+  .empty-state{
+    text-align:center;padding:50px 20px;color:var(--sage);
+  }
+  .empty-state svg{width:36px;height:36px;margin-bottom:12px;opacity:0.5;}
+  .empty-state p{margin:0;font-size:14px;}
+
+  footer.credit{
+    text-align:center;color:var(--sage);font-size:12px;padding:36px 0 0;
+  }
+
+  .config-banner{
+    background:#FBF0E4;border:1.5px solid var(--brass);color:var(--ink-green-dark);
+    padding:14px 18px;border-radius:8px;font-size:13px;margin-bottom:20px;line-height:1.5;
+  }
+  .config-banner code{background:rgba(0,0,0,0.06);padding:1px 5px;border-radius:4px;font-family:'IBM Plex Mono',monospace;font-size:12px;}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="brand-row">
+    <div class="brand">
+      <h1>Bina Legasi AmanahRaya</h1>
+      <div class="sub">Laporan Jualan Harian &amp; Dashboard</div>
+    </div>
+  </div>
+  <div class="tabs">
+    <button class="tab active" data-view="form">Borang Harian</button>
+    <button class="tab" data-view="dash">Dashboard</button>
+  </div>
+</header>
+
+<div class="app">
+<main>
+
+  <!-- FORM VIEW -->
+  <section id="view-form" class="view active">
+    <div id="configBanner"></div>
+    <div class="form-card">
+      <div class="form-head">
+        <h2>Laporan Jualan Harian — Wakil Jualan</h2>
+        <p>Sila lengkapkan semua ruang sebelum menghantar. Data akan direkodkan ke dashboard serta-merta.</p>
+      </div>
+      <form id="dailyForm">
+
+        <div class="field">
+          <div class="fnum">1</div>
+          <div class="fbody">
+            <label for="tarikh">TARIKH</label>
+            <input type="date" id="tarikh" name="tarikh" required>
+          </div>
+        </div>
+
+        <div class="field">
+          <div class="fnum">2</div>
+          <div class="fbody">
+            <label for="cawangan">NAMA CAWANGAN</label>
+            <select id="cawangan" name="cawangan" required>
+              <option value="" disabled selected>Pilih cawangan</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="section-label">Prestasi Kaunter</div>
+
+        <div class="field">
+          <div class="fnum">3</div>
+          <div class="fbody">
+            <label for="walk_in">JUMLAH PENGUNJUNG / WALK-IN</label>
+            <input type="number" min="0" step="1" id="walk_in" name="walk_in" required>
+          </div>
+        </div>
+        <div class="field">
+          <div class="fnum">4</div>
+          <div class="fbody">
+            <label for="hibahku">JUMLAH PENDAFTARAN HiBAHKU</label>
+            <input type="number" min="0" step="1" id="hibahku" name="hibahku" required>
+          </div>
+        </div>
+        <div class="field">
+          <div class="fnum">5</div>
+          <div class="fbody">
+            <label for="wasiat_asas">JUMLAH PENDAFTARAN WASIAT ASAS</label>
+            <input type="number" min="0" step="1" id="wasiat_asas" name="wasiat_asas" required>
+          </div>
+        </div>
+        <div class="field">
+          <div class="fnum">6</div>
+          <div class="fbody">
+            <label for="wasiat_komprehensif">JUMLAH PENDAFTARAN WASIAT KOMPREHENSIF</label>
+            <input type="number" min="0" step="1" id="wasiat_komprehensif" name="wasiat_komprehensif" required>
+          </div>
+        </div>
+        <div class="field">
+          <div class="fnum">7</div>
+          <div class="fbody">
+            <label for="wasiat_conversion">JUMLAH PENDAFTARAN WASIAT (CONVERSION)</label>
+            <input type="number" min="0" step="1" id="wasiat_conversion" name="wasiat_conversion" required>
+          </div>
+        </div>
+        <div class="field">
+          <div class="fnum">8</div>
+          <div class="fbody">
+            <label for="amanah_tunai_hartanah">JUMLAH PENDAFTARAN AMANAH TUNAI / HARTANAH</label>
+            <input type="number" min="0" step="1" id="amanah_tunai_hartanah" name="amanah_tunai_hartanah" required>
+          </div>
+        </div>
+
+        <div class="section-label">Fail Pentadbiran Pusaka</div>
+
+        <div class="field">
+          <div class="fnum">9</div>
+          <div class="fbody">
+            <label for="fail_s13">JUMLAH PEMBUKAAN FAIL PENTADBIRAN PUSAKA S13</label>
+            <input type="number" min="0" step="1" id="fail_s13" name="fail_s13" required>
+          </div>
+        </div>
+        <div class="field">
+          <div class="fnum">10</div>
+          <div class="fbody">
+            <label for="fail_s17_1">JUMLAH PEMBUKAAN FAIL PENTADBIRAN PUSAKA S17(1)</label>
+            <input type="number" min="0" step="1" id="fail_s17_1" name="fail_s17_1" required>
+          </div>
+        </div>
+        <div class="field">
+          <div class="fnum">11</div>
+          <div class="fbody">
+            <label for="fail_s17_2">JUMLAH PEMBUKAAN FAIL PENTADBIRAN PUSAKA S17(2)</label>
+            <input type="number" min="0" step="1" id="fail_s17_2" name="fail_s17_2" required>
+          </div>
+        </div>
+        <div class="field">
+          <div class="fnum">12</div>
+          <div class="fbody">
+            <label for="fail_s8">JUMLAH PEMBUKAAN FAIL PENTADBIRAN PUSAKA S8</label>
+            <input type="number" min="0" step="1" id="fail_s8" name="fail_s8" required>
+          </div>
+        </div>
+
+        <div class="section-label">Anggaran Nilaian Harta Diterima (RM)</div>
+
+        <div class="field">
+          <div class="fnum">13</div>
+          <div class="fbody">
+            <label for="nilai_s13">ANGGARAN JUMLAH KESELURUHAN NILAIAN HARTA YANG DITERIMA (S13 SAHAJA)</label>
+            <input type="number" min="0" step="0.01" id="nilai_s13" name="nilai_s13" required>
+          </div>
+        </div>
+        <div class="field">
+          <div class="fnum">14</div>
+          <div class="fbody">
+            <label for="nilai_s17_1">ANGGARAN JUMLAH KESELURUHAN NILAIAN HARTA YANG DITERIMA (S17(1) SAHAJA)</label>
+            <input type="number" min="0" step="0.01" id="nilai_s17_1" name="nilai_s17_1" required>
+          </div>
+        </div>
+        <div class="field">
+          <div class="fnum">15</div>
+          <div class="fbody">
+            <label for="nilai_s17_2">ANGGARAN JUMLAH KESELURUHAN NILAIAN HARTA YANG DITERIMA (S17(2) SAHAJA)</label>
+            <input type="number" min="0" step="0.01" id="nilai_s17_2" name="nilai_s17_2" required>
+          </div>
+        </div>
+        <div class="field">
+          <div class="fnum">16</div>
+          <div class="fbody">
+            <label for="nilai_s8">ANGGARAN JUMLAH KESELURUHAN NILAIAN HARTA YANG DITERIMA (S8 SAHAJA)</label>
+            <input type="number" min="0" step="0.01" id="nilai_s8" name="nilai_s8" required>
+          </div>
+        </div>
+
+        <div class="submit-row">
+          <button type="submit" class="primary" id="submitBtn">Hantar</button>
+          <span class="form-msg" id="formMsg"></span>
+        </div>
+        <div class="stamp" id="stamp">
+          <div class="dot"></div>
+          <span>Direkodkan — laporan telah disimpan ke sistem.</span>
+        </div>
+      </form>
+    </div>
+  </section>
+
+  <!-- DASHBOARD VIEW -->
+  <section id="view-dash" class="view">
+    <div id="configBanner2"></div>
+
+    <div class="dash-toolbar">
+      <div class="fld">
+        <label>Cawangan</label>
+        <select id="filterCawangan"><option value="">Semua cawangan</option></select>
+      </div>
+      <div class="fld">
+        <label>Dari</label>
+        <input type="date" id="filterFrom">
+      </div>
+      <div class="fld">
+        <label>Hingga</label>
+        <input type="date" id="filterTo">
+      </div>
+      <button id="btnRefresh">Muat semula</button>
+    </div>
+
+    <div class="stat-grid" id="statGrid"></div>
+
+    <div class="panels">
+      <div class="panel">
+        <h3>Pendaftaran mengikut jenis</h3>
+        <canvas id="chartRegs" height="220"></canvas>
+      </div>
+      <div class="panel">
+        <h3>Walk-in mengikut cawangan</h3>
+        <canvas id="chartBranch" height="220"></canvas>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h3>Rekod terperinci</h3>
+      <div class="table-wrap" id="tableWrap"></div>
+    </div>
+  </section>
+
+</main>
+<footer class="credit">© 2026 Amanah Raya Berhad · Business Development Department · All Rights Reserved · Powered by BDD (HH)</footer>
+</div>
+
+<script>
+/* ======================= CONFIG =======================
+   Fill these in with your Supabase project's values.
+   Project Settings -> API in your Supabase dashboard.
+======================================================== */
+const SUPABASE_URL = "https://wluleuofoiacezruvyea.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndsdWxldW9mb2lhY2V6cnV2eWVhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODUzMDY2MzYsImV4cCI6MjEwMDg4MjYzNn0.o7ym7Vovs8-vD1y2_aVKokzro-Q8f-Qa697PSQyb7NE";
+const TABLE_NAME = "sales_reports";
+
+const BRANCHES = [
+  "Alor Setar","Bangi","Batu Pahat","Ipoh","Johor Bahru","Kangar","Kota Bharu",
+  "Kuantan","Kuala Lumpur","Kuala Terengganu","Kuching","Kota Kinabalu",
+  "Muar","Melaka","Penang","Seremban","Shah Alam","Sungai Petani",
+  "Teluk Intan","Temerloh"
+];
+
+const NUMBER_FIELDS = [
+  "walk_in","hibahku","wasiat_asas","wasiat_komprehensif","wasiat_conversion","amanah_tunai_hartanah",
+  "fail_s13","fail_s17_1","fail_s17_2","fail_s8",
+  "nilai_s13","nilai_s17_1","nilai_s17_2","nilai_s8"
+];
+
+const isConfigured = SUPABASE_URL !== "YOUR_SUPABASE_URL" && SUPABASE_ANON_KEY !== "YOUR_SUPABASE_ANON_KEY";
+let supabaseClient = null;
+let configError = null;
+if (isConfigured) {
+  if (typeof window.supabase === "undefined" || !window.supabase.createClient) {
+    configError = "Pustaka Supabase gagal dimuatkan daripada CDN (mungkin disekat oleh firewall/ad-blocker rangkaian anda). Cuba buka laman ini dalam tab baru, guna rangkaian lain, atau lumpuhkan ad-blocker.";
+  } else {
+    try {
+      supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    } catch (err) {
+      configError = err.message || String(err);
+      console.error("Supabase init failed:", err);
+    }
+  }
+}
+
+const bannerHtml = `<div class="config-banner">
+  <strong>Belum disambungkan ke Supabase.</strong> Buka fail <code>index.html</code> dan isi <code>SUPABASE_URL</code> serta <code>SUPABASE_ANON_KEY</code> di bahagian atas skrip untuk mengaktifkan borang &amp; papan pantau. Ikut panduan step-by-step yang diberikan untuk buat projek Supabase.
+</div>`;
+const errorBannerHtml = `<div class="config-banner" style="border-color:var(--rust);background:#FBEAE6;">
+  <strong>Ralat konfigurasi Supabase:</strong> ${configError}. Semak semula <code>SUPABASE_URL</code> (patut berbentuk <code>https://xxxx.supabase.co</code>, tanpa <code>/rest/v1/</code>) dan <code>SUPABASE_ANON_KEY</code> dalam <code>index.html</code>.
+</div>`;
+if (configError) {
+  document.getElementById("configBanner").innerHTML = errorBannerHtml;
+  document.getElementById("configBanner2").innerHTML = errorBannerHtml;
+} else if (!isConfigured) {
+  document.getElementById("configBanner").innerHTML = bannerHtml;
+  document.getElementById("configBanner2").innerHTML = bannerHtml;
+}
+
+/* ---------- Tabs ---------- */
+document.querySelectorAll(".tab").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".tab").forEach(b => b.classList.remove("active"));
+    document.querySelectorAll(".view").forEach(v => v.classList.remove("active"));
+    btn.classList.add("active");
+    document.getElementById("view-" + btn.dataset.view).classList.add("active");
+    if (btn.dataset.view === "dash") loadDashboard();
+  });
+});
+
+/* ---------- Populate branch selects ---------- */
+function populateBranches(selectEl, includeAll) {
+  BRANCHES.forEach(b => {
+    const opt = document.createElement("option");
+    opt.value = b; opt.textContent = b;
+    selectEl.appendChild(opt);
+  });
+}
+populateBranches(document.getElementById("cawangan"));
+populateBranches(document.getElementById("filterCawangan"));
+
+/* ---------- Form submit ---------- */
+const form = document.getElementById("dailyForm");
+const submitBtn = document.getElementById("submitBtn");
+const formMsg = document.getElementById("formMsg");
+const stamp = document.getElementById("stamp");
+
+form.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  formMsg.textContent = "";
+  formMsg.className = "form-msg";
+  stamp.classList.remove("show");
+
+  if (!isConfigured) {
+    formMsg.textContent = "Sila konfigurasikan Supabase dahulu (lihat mesej di atas).";
+    formMsg.classList.add("err");
+    return;
+  }
+
+  const payload = {
+    tarikh: document.getElementById("tarikh").value,
+    cawangan: document.getElementById("cawangan").value,
+  };
+  NUMBER_FIELDS.forEach(f => {
+    const v = document.getElementById(f).value;
+    payload[f] = v === "" ? null : Number(v);
+  });
+
+  submitBtn.disabled = true;
+  submitBtn.textContent = "Menghantar...";
+
+  const { error } = await supabaseClient.from(TABLE_NAME).insert([payload]);
+
+  submitBtn.disabled = false;
+  submitBtn.textContent = "Hantar Laporan";
+
+  if (error) {
+    formMsg.textContent = "Ralat: " + error.message;
+    formMsg.classList.add("err");
+  } else {
+    formMsg.textContent = "Berjaya dihantar.";
+    formMsg.classList.add("ok");
+    stamp.classList.add("show");
+    form.reset();
+  }
+});
+
+/* ---------- Dashboard ---------- */
+let chartRegs = null, chartBranch = null;
+let dashLoaded = false;
+
+document.getElementById("btnRefresh").addEventListener("click", loadDashboard);
+
+async function loadDashboard() {
+  if (!isConfigured) return;
+
+  const branch = document.getElementById("filterCawangan").value;
+  const from = document.getElementById("filterFrom").value;
+  const to = document.getElementById("filterTo").value;
+
+  let query = supabaseClient.from(TABLE_NAME).select("*").order("tarikh", { ascending: false });
+  if (branch) query = query.eq("cawangan", branch);
+  if (from) query = query.gte("tarikh", from);
+  if (to) query = query.lte("tarikh", to);
+
+  const { data, error } = await query;
+  if (error) {
+    document.getElementById("tableWrap").innerHTML = `<div class="empty-state"><p>Ralat memuatkan data: ${error.message}</p></div>`;
+    return;
+  }
+  renderDashboard(data || []);
+}
+
+function sum(rows, key) {
+  return rows.reduce((acc, r) => acc + (Number(r[key]) || 0), 0);
+}
+function fmtNum(n) { return n.toLocaleString("en-MY"); }
+function fmtMoney(n) { return "RM " + n.toLocaleString("en-MY", { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+
+function renderDashboard(rows) {
+  const statGrid = document.getElementById("statGrid");
+  const totalWalkIn = sum(rows, "walk_in");
+  const totalRegs = sum(rows, "hibahku") + sum(rows, "wasiat_asas") + sum(rows, "wasiat_komprehensif") + sum(rows, "wasiat_conversion") + sum(rows, "amanah_tunai_hartanah");
+  const totalFiles = sum(rows, "fail_s13") + sum(rows, "fail_s17_1") + sum(rows, "fail_s17_2") + sum(rows, "fail_s8");
+  const totalValue = sum(rows, "nilai_s13") + sum(rows, "nilai_s17_1") + sum(rows, "nilai_s17_2") + sum(rows, "nilai_s8");
+  const conversionRate = totalWalkIn > 0 ? (totalRegs / totalWalkIn) * 100 : 0;
+
+  statGrid.innerHTML = `
+    <div class="stat"><div class="label">Jumlah Rekod</div><div class="value">${fmtNum(rows.length)}</div></div>
+    <div class="stat"><div class="label">Jumlah Walk-in</div><div class="value">${fmtNum(totalWalkIn)}</div></div>
+    <div class="stat"><div class="label">Jumlah Pendaftaran</div><div class="value">${fmtNum(totalRegs)}</div></div>
+    <div class="stat"><div class="label">Kadar Penukaran</div><div class="value">${conversionRate.toFixed(1)}<small> %</small></div></div>
+    <div class="stat"><div class="label">Jumlah Fail Pusaka</div><div class="value">${fmtNum(totalFiles)}</div></div>
+    <div class="stat"><div class="label">Anggaran Nilai Harta</div><div class="value">${fmtMoney(totalValue)}</div></div>
+  `;
+
+  // Chart 1: registrations by type
+  const regLabels = ["HiBAHKU","Wasiat Asas","Wasiat Komprehensif","Wasiat (Conversion)","Amanah/Hartanah"];
+  const regData = [sum(rows,"hibahku"), sum(rows,"wasiat_asas"), sum(rows,"wasiat_komprehensif"), sum(rows,"wasiat_conversion"), sum(rows,"amanah_tunai_hartanah")];
+  if (typeof Chart === "undefined") {
+    console.error("Chart.js failed to load from CDN — charts skipped.");
+  } else {
+  if (chartRegs) chartRegs.destroy();
+  chartRegs = new Chart(document.getElementById("chartRegs"), {
+    type: "bar",
+    data: { labels: regLabels, datasets: [{ data: regData, backgroundColor: "#6B1A2C", borderRadius: 5, maxBarThickness: 46 }] },
+    options: { plugins:{legend:{display:false}}, scales:{ y:{ beginAtZero:true, grid:{color:"#E3DAD0"} }, x:{ grid:{display:false} } } }
+  });
+
+  // Chart 2: walk-in by branch
+  const byBranch = {};
+  rows.forEach(r => { byBranch[r.cawangan] = (byBranch[r.cawangan] || 0) + (Number(r.walk_in) || 0); });
+  const branchLabels = Object.keys(byBranch);
+  const branchData = Object.values(byBranch);
+  if (chartBranch) chartBranch.destroy();
+  chartBranch = new Chart(document.getElementById("chartBranch"), {
+    type: "bar",
+    data: { labels: branchLabels, datasets: [{ data: branchData, backgroundColor: "#C9A227", borderRadius: 5, maxBarThickness: 30 }] },
+    options: { indexAxis: "y", plugins:{legend:{display:false}}, scales:{ x:{ beginAtZero:true, grid:{color:"#E3DAD0"} }, y:{ grid:{display:false} } } }
+  });
+  }
+
+  // Table
+  const tableWrap = document.getElementById("tableWrap");
+  if (!rows.length) {
+    tableWrap.innerHTML = `<div class="empty-state"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M9 4v16"/></svg><p>Tiada rekod lagi. Rekod akan muncul di sini sebaik SR menghantar borang.</p></div>`;
+    return;
+  }
+  const cols = ["tarikh","cawangan","walk_in","hibahku","wasiat_asas","wasiat_komprehensif","wasiat_conversion","amanah_tunai_hartanah","fail_s13","fail_s17_1","fail_s17_2","fail_s8","nilai_s13","nilai_s17_1","nilai_s17_2","nilai_s8"];
+  const labels = ["Tarikh","Cawangan","Walk-in","HiBAHKU","Wasiat Asas","Wasiat Kompr.","Wasiat (Conv.)","Amanah/Hartanah","Fail S13","Fail S17(1)","Fail S17(2)","Fail S8","Nilai S13","Nilai S17(1)","Nilai S17(2)","Nilai S8"];
+  let html = "<table><thead><tr>" + labels.map(l => `<th>${l}</th>`).join("") + "</tr></thead><tbody>";
+  rows.forEach(r => {
+    html += "<tr>" + cols.map(c => `<td>${r[c] ?? "-"}</td>`).join("") + "</tr>";
+  });
+  html += "</tbody></table>";
+  tableWrap.innerHTML = html;
+}
+
+// Load dashboard on first view if already configured
+if (isConfigured && !configError) {
+  try { loadDashboard(); } catch (err) { console.error("Dashboard load failed:", err); }
+}
+</script>
+
+</body>
+</html>
